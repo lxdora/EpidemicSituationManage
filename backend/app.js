@@ -7,7 +7,7 @@ app.use(async (ctx, next) => {
   const rt = ctx.response.get('X-Response-Time');
   console.log(`${ctx.method} ${ctx.url} - ${rt}`);
   const today = new Date().toDateString();
-  const log_file = `./logs/${today}.txt`;
+  const log_file = `./src/logs/${today}.txt`;
   const fs = require('fs/promises');
   const log_text = `${ctx.method} ${ctx.url} - ${rt}`;
   try{
