@@ -1,5 +1,7 @@
 const Router = require('koa-router')
-const router = new Router();
+const router = Router();
+const user = require('./user')
 
-export default router;
+router.use('/user', user.routes(), user.allowedMethods())
+module.exports = router;
 

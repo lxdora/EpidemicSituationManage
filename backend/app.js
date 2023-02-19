@@ -1,15 +1,29 @@
 const koa = require('koa');
 const app = new koa();
-import router from './router'
+const router = require('./src/routers')
+const path = require('path')
+
+
+const {koaBody} = require('koa-body')
+app.use(koaBody())
+
+// x-response-time
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  ctx.set('X-Response-Time', `${ms}ms`);
+});
+
 // logger
 app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.get('X-Response-Time');
   console.log(`${ctx.method} ${ctx.url} - ${rt}`);
-  const today = new Date().toDateString();
-  const log_file = `./src/logs/${today}.txt`;
+  const today = `${new Date().getFullYear()}-${new Date().getMonth()+1}-${new Date().getDate()}`
+  const log_file = path.resolve(__dirname,'src/logs', today+'.txt');
   const fs = require('fs/promises');
-  const log_text = `${ctx.method} ${ctx.url} - ${rt}`;
+  const log_text = `${ctx.method} ${ctx.url} - ${rt}-request-body:${JSON.stringify(ctx.request.body)}`;
   try{
     await fs.access(log_file, fs.constants.R_OK|fs.constants.W_OK);
   }catch{
@@ -19,25 +33,17 @@ app.use(async (ctx, next) => {
       }
     })
   }
-  fs.appendFile(log_file, log_text, (err)=>{
-    if(err){
-      console.log('记录日志失败')
-    }
-  })
+  try{
+    fs.appendFile(log_file, log_text, (err)=>{
+      if(err){
+        console.log('记录日志失败')
+      }
+    })
+  }catch(err){
+    console.log('追加日志失败',err)
+  }
 });
 
-// x-response-time
-
-app.use(async (ctx, next) => {
-  const start = Date.now();
-  await next();
-  const ms = Date.now() - start;
-  ctx.set('X-Response-Time', `${ms}ms`);
-});
-
-const koaBody = require('koa-body')
-app.use(koaBody({
-  jsonLimit: '1kb'
-}))
 app.use(router.routes()).use(router.allowedMethods())
+
 app.listen(3000)

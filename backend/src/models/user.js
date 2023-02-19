@@ -41,6 +41,20 @@ const user = {
       result = null
     }
     return result;
+  },
+
+  async getUserList(options) {
+    const _sql = `select * from user limit ${(options.page-1)*options.count}, ${options.count}`
+    const result = await dbUtils.query(_sql);
+    if(Array.isArray(result) && result.length>0){
+      return result;
+    }
+    return []
+  },
+  async getUserCount() {
+    const result = await dbUtils.count('user');
+    console.log(result);
+    return result[0].total_count;
   }
 
 }
